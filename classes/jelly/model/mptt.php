@@ -846,6 +846,8 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
                 return $this->meta()->scope_column;
             case 'db':
                 return $this->meta()->db();
+			case 'table':
+                return $this->meta()->table();
 			default:
 				return parent::__get($column);
 		}
