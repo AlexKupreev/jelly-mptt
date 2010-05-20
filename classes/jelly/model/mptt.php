@@ -111,7 +111,7 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 	 */
 	protected function lock()
 	{
-		Database::instance($this->db)->query(NULL, 'LOCK TABLE '.$this->table.' WRITE', TRUE);
+		Database::instance($this->db)->query(NULL, 'LOCK TABLE '.Database::instance($this->db)->table_prefix().$this->table.' WRITE', TRUE);
 	}
 	
 	/**
@@ -786,13 +786,14 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 			$offset = ($left_offset - $this->{$this->left_column});
 			
 			// Update the values.
-			Database::instance($this->db)->query(NULL, 'UPDATE '.$this->table.' 
-				SET `'.$this->left_column.'` = `'.$this->left_column.'` + '.$offset.', `'.$this->right_column.'` = `'.$this->right_column.'` + '.$offset.'
-				, `'.$this->level_column.'` = `'.$this->level_column.'` + '.$level_offset.'
-				, `'.$this->scope_column.'` = '.$target->{$this->scope_column}.' 
-				WHERE `'.$this->left_column.'` >= '.$this->{$this->left_column}.' 
-				AND `'.$this->right_column.'` <= '.$this->{$this->right_column}.' 
-				AND `'.$this->scope_column.'` = '.$this->{$this->scope_column}, TRUE);
+			Database::instance($this->db)
+                ->query(NULL, 'UPDATE '.Database::instance($this->db)->table_prefix().$this->table.' 
+				    SET `'.$this->left_column.'` = `'.$this->left_column.'` + '.$offset.', `'.$this->right_column.'` = `'.$this->right_column.'` + '.$offset.'
+				    , `'.$this->level_column.'` = `'.$this->level_column.'` + '.$level_offset.'
+				    , `'.$this->scope_column.'` = '.$target->{$this->scope_column}.' 
+				    WHERE `'.$this->left_column.'` >= '.$this->{$this->left_column}.' 
+				    AND `'.$this->right_column.'` <= '.$this->{$this->right_column}.' 
+				    AND `'.$this->scope_column.'` = '.$this->{$this->scope_column}, TRUE);
 			
 			$this->delete_space($this->{$this->left_column}, $size);
 		}
@@ -846,7 +847,7 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
                 return $this->meta()->scope_column;
             case 'db':
                 return $this->meta()->db();
-			case 'table':
+            case 'table':
                 return $this->meta()->table();
 			default:
 				return parent::__get($column);
@@ -881,7 +882,7 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
         return Database::instance($this->db)
             ->query(
                 Database::SELECT, 
-                'SELECT DISTINCT `'.$this->scope_column.'` FROM `'.$this->table.'`', 
+                'SELECT DISTINCT `'.$this->scope_column.'` FROM `'.Database::instance($this->db)->table_prefix().$this->table.'`', 
                 TRUE
                 );
 	}
@@ -893,21 +894,21 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 		$end = $root->{$this->right_column};
 		
 		// Find nodes that have slipped out of bounds.
-		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.$this->table.'` 
+		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
 			WHERE `'.$this->scope_column.'` = '.$root->scope.' AND (`'.$this->left_column.'` > '.$end.' 
 			OR `'.$this->right_column.'` > '.$end.')', TRUE);
 		if ($result[0]->count > 0)
 			return FALSE;
 		
 		// Find nodes that have the same left and right value
-		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.$this->table.'` 
+		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
 			WHERE `'.$this->scope_column.'` = '.$root->scope.' 
 			AND `'.$this->left_column.'` = `'.$this->right_column.'`', TRUE);
 		if ($result[0]->count > 0)
 			return FALSE;
 		
 		// Find nodes that right value is less than the left value
-		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.$this->table.'` 
+		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
 			WHERE `'.$this->scope_column.'` = '.$root->scope.' 
 			AND `'.$this->left_column.'` > `'.$this->right_column.'`', TRUE);
 		if ($result[0]->count > 0)
@@ -917,7 +918,7 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 		$i = 1;
 		while ($i <= $end)
 		{
-			$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.$this->table.'` 
+			$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
 				WHERE `'.$this->scope_column.'` = '.$root->scope.' 
 				AND (`'.$this->left_column.'` = '.$i.' OR `'.$this->right_column.'` = '.$i.')', TRUE);
 			

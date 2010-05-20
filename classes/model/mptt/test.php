@@ -28,13 +28,13 @@ class Model_MPTT_Test extends Jelly_Model_MPTT {
 	public function create_table()
 	{
 		$this->delete_table();
-		Database::instance()->query(NULL, 'CREATE TABLE `'.$this->table.'` (`id` INT( 255 ) UNSIGNED NOT NULL AUTO_INCREMENT ,`lvl` INT( 255 ) NOT NULL ,`lft` INT( 255 ) NOT NULL ,`rgt` INT( 255 ) NOT NULL ,`scope` INT( 255 ) NOT NULL ,`name` VARCHAR( 255 ) NOT NULL ,PRIMARY KEY ( `id` )) ENGINE = MYISAM ', TRUE);
+		Database::instance()->query(NULL, 'CREATE TABLE `'.Database::instance()->table_prefix().$this->table.'` (`id` INT( 255 ) UNSIGNED NOT NULL AUTO_INCREMENT ,`lvl` INT( 255 ) NOT NULL ,`lft` INT( 255 ) NOT NULL ,`rgt` INT( 255 ) NOT NULL ,`scope` INT( 255 ) NOT NULL ,`name` VARCHAR( 255 ) NOT NULL ,PRIMARY KEY ( `id` )) ENGINE = MYISAM ', TRUE);
 		$this->reset_table();
 	}
 	
 	public function reset_table()
 	{
-		Database::instance()->query(NULL, 'TRUNCATE TABLE `'.$this->table.'`', TRUE);
+		Database::instance()->query(NULL, 'TRUNCATE TABLE `'.Database::instance()->table_prefix().$this->table.'`', TRUE);
 		DB::insert('jelly_mptt_test')->values(array('id' => 1,'lvl' => 0,'lft' => 1, 'rgt' => 22, 'scope' => 1, 'name' => 'Root Node'))->execute();
 
 		DB::insert('jelly_mptt_test')->values(array('id' => 2,'lvl' => 1,'lft' => 2, 'rgt' => 3, 'scope' => 1, 'name' => 'Leaf Node'))->execute();
@@ -75,6 +75,6 @@ class Model_MPTT_Test extends Jelly_Model_MPTT {
 	
 	public function delete_table()
 	{
-		Database::instance()->query(NULL, 'DROP TABLE IF EXISTS `'.$this->table.'`', TRUE);
+		Database::instance()->query(NULL, 'DROP TABLE IF EXISTS `'.Database::instance()->table_prefix().$this->table.'`', TRUE);
     }
 }
