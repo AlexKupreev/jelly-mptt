@@ -499,13 +499,12 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 		// Insert should only work on new nodes.. if its already it the tree it needs to be moved!
 		if ($this->loaded())
 			return FALSE;
-				
 		
 		if ( ! $target instanceof $this)
 		{
 			$target = Jelly::select($this)
                 ->load($target);
-			
+			            
 			if ( ! $target->loaded())
 			{
 				return FALSE;
@@ -515,20 +514,21 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 		{
 			$target->reload();
 		}
-		
+        
 		$this->lock();
 		
-		$this->{$this->left_column}  = $target->{$copy_left_from} + $left_offset;
-		$this->{$this->right_column} = $this->{$this->left_column} + 1;
-		$this->{$this->level_column} = $target->{$this->level_column} + $level_offset;
-		$this->{$this->scope_column} = $target->{$this->scope_column};
-		
+		$this->set(array(
+			$this->left_column => $target->{$copy_left_from} + $left_offset,
+			$this->right_column => $target->{$copy_left_from} + $left_offset + 1,
+			$this->level_column => $target->{$this->level_column} + $level_offset,
+			$this->scope_column => $target->{$this->scope_column},
+			));
+        
 		$this->create_space($this->{$this->left_column});
-		
+        
 		try
 		{
-			//parent::create();
-            $this->save();
+			$this->save();
 		}
 		catch (Exception $e)
 		{
