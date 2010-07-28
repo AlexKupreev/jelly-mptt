@@ -34,7 +34,7 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 	public function __construct($values = array())
 	{
 		// Initialize jelly model 
-		parent::__construct($values = array());
+		parent::__construct($values);
         
         // Check we have default values for all (MPTT) fields (otherwise we cause errors)
         foreach ($this->meta()->fields() as $name => $field)
