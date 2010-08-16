@@ -786,14 +786,17 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 			$offset = ($left_offset - $this->{$this->left_column});
 			
 			// Update the values.
-			Database::instance($this->db)
-                ->query(NULL, 'UPDATE '.Database::instance($this->db)->table_prefix().$this->table.' 
-				    SET `'.$this->left_column.'` = `'.$this->left_column.'` + '.$offset.', `'.$this->right_column.'` = `'.$this->right_column.'` + '.$offset.'
-				    , `'.$this->level_column.'` = `'.$this->level_column.'` + '.$level_offset.'
-				    , `'.$this->scope_column.'` = '.$target->{$this->scope_column}.' 
-				    WHERE `'.$this->left_column.'` >= '.$this->{$this->left_column}.' 
-				    AND `'.$this->right_column.'` <= '.$this->{$this->right_column}.' 
-				    AND `'.$this->scope_column.'` = '.$this->{$this->scope_column}, TRUE);
+			DB::update($this->table)
+                ->set(array(
+                    $this->left_column => DB::expr('`'.$this->left_column.'` + '.$offset),
+                    $this->right_column => DB::expr('`'.$this->right_column.'` + '.$offset),
+                    $this->level_column => DB::expr('`'.$this->level_column.'` + '.$level_offset),
+                    $this->scope_column => $target->{$this->scope_column}
+                    ))
+                ->where($this->left_column, '>=', $this->{$this->left_column})
+                ->and_where($this->right_column, '<=', $this->{$this->right_column})
+                ->and_where($this->scope_column, '=', $this->{$this->scope_column})
+                ->execute($this->db);
 			
 			$this->delete_space($this->{$this->left_column}, $size);
 		}
@@ -879,12 +882,8 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 		// TODO... redo this so its proper :P and open it public
 		// used by verify_tree()
         //return DB::select()->as_object()->distinct($this->scope_column)->from($this->table)->execute($this->db);
-        return Database::instance($this->db)
-            ->query(
-                Database::SELECT, 
-                'SELECT DISTINCT `'.$this->scope_column.'` FROM `'.Database::instance($this->db)->table_prefix().$this->table.'`', 
-                TRUE
-                );
+                
+        return DB::select($this->scope_column)->distinct(TRUE)->from($this->table)->as_object()->execute($this->db);
 	}
 	
 	public function verify_scope($scope)
@@ -894,31 +893,33 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 		$end = $root->{$this->right_column};
 		
 		// Find nodes that have slipped out of bounds.
-		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
-			WHERE `'.$this->scope_column.'` = '.$root->scope.' AND (`'.$this->left_column.'` > '.$end.' 
-			OR `'.$this->right_column.'` > '.$end.')', TRUE);
-		if ($result[0]->count > 0)
+		$count = DB::select(array('COUNT("*")', 'count'))
+            ->from($this->table)
+            ->where($this->scope_column, '=', $root->scope)
+            ->and_where_open($this->left_column, '>', $end)
+                ->or_where($this->right_column, '>', $end)
+            ->and_where_close()
+            ->execute($this->db)
+            ->get('count');
+		if ($count > 0)
 			return FALSE;
 		
-		// Find nodes that have the same left and right value
-		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
-			WHERE `'.$this->scope_column.'` = '.$root->scope.' 
-			AND `'.$this->left_column.'` = `'.$this->right_column.'`', TRUE);
-		if ($result[0]->count > 0)
-			return FALSE;
-		
-		// Find nodes that right value is less than the left value
-		$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
-			WHERE `'.$this->scope_column.'` = '.$root->scope.' 
-			AND `'.$this->left_column.'` > `'.$this->right_column.'`', TRUE);
-		if ($result[0]->count > 0)
-			return FALSE;
+		// Find nodes that right value is less or equal as the left value
+		$count = DB::select(array('COUNT("*")', 'count'))
+            ->from($this->table)
+            ->where($this->scope_column, '=', $root->scope)
+            ->and_where($this->left_column, '>=', DB::expr('`'.$this->right_column.'`'))
+            ->execute($this->db)
+            ->get('count');
+        if ($count > 0)
+            return FALSE;
 		
 		// Make sure no 2 nodes share a left/right value
 		$i = 1;
 		while ($i <= $end)
 		{
-			$result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
+			// TODO optimize request
+            $result = Database::instance($this->db)->query(Database::SELECT, 'SELECT count(*) as count FROM `'.Database::instance($this->db)->table_prefix().$this->table.'` 
 				WHERE `'.$this->scope_column.'` = '.$root->scope.' 
 				AND (`'.$this->left_column.'` = '.$i.' OR `'.$this->right_column.'` = '.$i.')', TRUE);
 			
