@@ -1,11 +1,11 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 /**
- * Jelly_Meta extends Jelly_Meta_Core object to add MPTT properties.
+ * Jelly_Meta_MPTT extends Jelly_Meta_Core object to add MPTT properties.
  *
  * @package Jelly_MPTT
  */
-class Jelly_Meta extends Jelly_Meta_Core
+class Jelly_Meta_MPTT extends Jelly_Meta_Core
 {
     /**
      * @access public

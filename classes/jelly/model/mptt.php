@@ -34,7 +34,34 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
 	public function __construct($values = array())
 	{
 		// Initialize jelly model 
-		parent::__construct($values);
+		//parent::__construct($values);
+        
+        // override Jelly constructor to prevent collision Jelly_Meta 
+        // when extending Jelly_Meta class in other module or application
+        
+        // Load the object's meta data for quick access
+        $this->_meta = Jelly_MPTT::meta($this);
+
+        // Copy over the defaults into the original data. This also has
+        // the added benefit of registering the model's metadata, if it does not exist yet
+        $this->_original = $this->_meta->defaults();
+
+        // Add the values stored by mysql_set_object
+        if ( ! empty($this->_preload_data) AND is_array($this->_preload_data))
+        {
+            $this->load_values($this->_preload_data);
+            $this->_preload_data = array();
+        }
+
+        // Have an id? Attempt to load it
+        if ($values)
+        {
+            // Arrays are loaded as values, but not load()ed
+            if (is_array($values))
+            {
+                $this->set($values);
+            }
+        }
         
         // Check we have default values for all (MPTT) fields (otherwise we cause errors)
         foreach ($this->meta()->fields() as $name => $field)
@@ -46,7 +73,7 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
         }
     }
     
-    public static function initialize(Jelly_Meta $meta)
+    public static function initialize(Jelly_Meta_MPTT $meta)
     {
         // Check we don't have a composite primary Key
         if (is_array($meta->primary_key())) 
