@@ -22,7 +22,7 @@ class Model_MPTT_Test extends Jelly_Model_MPTT {
         $this->_db = Database::instance('unit_testing');
     }
     
-    public static function initialize(Jelly_Meta_MPTT $meta)
+    public static function initialize(Jelly_Meta $meta)
     {
         // Notice how the MPTT fields are added automatically
         $meta->db('unit_testing')

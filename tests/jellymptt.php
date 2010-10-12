@@ -73,9 +73,9 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
 		// This should create scope 4 and return iteself
 		$this->assertSame($model->insert_as_new_root(4), $model);
 		// Check new root has been give the correct MPTT values
-		$this->assertEquals($model->lft, 1);
-		$this->assertEquals($model->rgt, 2);
-		$this->assertEquals($model->lvl, 0);
+		$this->assertEquals($model->left, 1);
+		$this->assertEquals($model->right, 2);
+		$this->assertEquals($model->level, 0);
 		$this->assertEquals($model->scope, 4);
 		// Make sure we haven't invalidated the tree
 		$this->assertTrue($model->verify_tree());  
@@ -91,8 +91,8 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
             ->execute();
 		                        
 		$this->assertTrue($model->loaded());
-		$this->assertEquals($model->lft, 4);
-		$this->assertEquals($model->rgt, 7);
+		$this->assertEquals($model->left, 4);
+		$this->assertEquals($model->right, 7);
 	}
 	
 	function testRoot()
