@@ -41,16 +41,24 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
 		 * Then scopes 2 and 3 duplicate this structure with correspondingly higher IDs
 		 * 
 		 */
+         
+         // create tables for hasMany check
+         Jelly::factory('mptt_owner')
+            ->create_tables();
+         
 	}
 	
 	function teardown()
-	{
+	{   
 		Jelly::factory('mptt_test')
-			->reset_table();
+			->reset_table(); 
+            
+        Jelly::factory('mptt_owner')
+            ->reset_tables();
 	}
 	
 	function __destruct()
-	{
+	{                         
 		// Delete test model database
         try
         {
@@ -61,6 +69,17 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
         {
             echo $e->getMessage();
         }
+        
+        try
+        {
+            Jelly::factory('mptt_owner')
+                ->delete_tables();    
+        } 
+        catch (Exception $e) 
+        {
+            echo $e->getMessage();
+        }
+        
 	}
 	
     public function testInsertAsNewRoot()
@@ -81,6 +100,26 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
 		$this->assertTrue($model->verify_tree());  
             
 	}
+    
+    public function testInsertAsNewRoot4HasMany()
+    {
+        $model = Jelly::factory('mptt_owned');
+        $model->name = "Test Root Node";
+        $model->owner = 2;
+        
+        // Scope 1 should already exist
+        $this->assertFalse($model->insert_as_new_root(1));
+        // This should create scope 4 and return iteself
+        $this->assertSame($model->insert_as_new_root(4), $model);
+        // Check new root has been give the correct MPTT values
+        $this->assertEquals($model->left, 1);
+        $this->assertEquals($model->right, 2);
+        $this->assertEquals($model->level, 0);
+        $this->assertEquals($model->scope, 4);
+        // Make sure we haven't invalidated the tree
+        $this->assertTrue($model->verify_tree());  
+            
+    }
 	
 	function testLoad()
 	{
@@ -374,6 +413,32 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($node_3_children[0]->id, $new->id);
 		$this->assertTrue($node_3->verify_tree());
 	}
+    
+    function testInsertAsFirstChild4HasMany()
+    {
+        $new = Jelly::factory('mptt_owned');
+        $new->name = 'Test Element';
+        $new->owner = 2;
+        
+        $node_1 = Jelly::select('mptt_owned')
+            ->where('id', '=', 1)
+            ->limit(1) 
+            ->execute();
+        
+        //$this->assertFalse($node_1->insert_as_first_child(4));
+        $this->assertEquals($new->insert_as_first_child($node_1), $new);
+            
+        // Reload node 1 to check insert worked
+        $node_1 = Jelly::select('mptt_owned')
+            ->where('id', '=', 1)
+            ->limit(1) 
+            ->execute();
+        $node_1_children = $node_1->children();
+        
+        $this->assertEquals(count($node_1_children), 2);
+        $this->assertEquals($node_1_children[0]->id, $new->id);
+        $this->assertTrue($node_1->verify_tree());
+    }
 
 	function testInsertAsLastChild()
 	{
@@ -424,6 +489,31 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($node_3_siblings[1]->id, $new->id);
 		$this->assertTrue($node_3->verify_tree());
 	}
+    
+    function testInsertAsPrevSibling4HasMany()
+    {
+        $new = Jelly::factory('mptt_owned');
+        $new->name = 'Test Element';
+        $new->owner = 2;
+        
+        $node_2 = Jelly::select('mptt_owned')
+            ->where('id', '=', 2)
+            ->limit(1) 
+            ->execute();
+        
+        $this->assertEquals($new->insert_as_prev_sibling($node_2), $new);
+            
+        // Reload node 2 to check insert worked
+        $node_2 = Jelly::select('mptt_owned')
+            ->where('id', '=', 2)
+            ->limit(1) 
+            ->execute();
+        $node_2_siblings = $node_2->siblings(TRUE);
+        
+        $this->assertEquals(count($node_2_siblings), 2);
+        $this->assertEquals($node_2_siblings[0]->id, $new->id);
+        $this->assertTrue($node_2->verify_tree());
+    }
 
 	function testInsertAsNextSibling()
 	{
@@ -449,9 +539,8 @@ class JellyMPTT extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($node_3_siblings[2]->id, $new->id);
 		$this->assertTrue($node_3->verify_tree());
 	}
-
-	
-	function testDelete()
+    
+    function testDelete()
 	{
 		$node_3 = Jelly::select('mptt_test')
             ->where('id', '=', 3)
