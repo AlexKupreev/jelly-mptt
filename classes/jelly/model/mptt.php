@@ -65,13 +65,13 @@ abstract class Jelly_Model_MPTT extends Jelly_Model
             'left'   => new Jelly_Field_MPTT_Left(array(
                 'column' => 'lft',
                 )),
-            'right'  => new Jelly_Field_MPTT_Left(array(
+            'right'  => new Jelly_Field_MPTT_Right(array(
                 'column' => 'rgt',
                 )),
-            'level'  => new Jelly_Field_MPTT_Left(array(
+            'level'  => new Jelly_Field_MPTT_Level(array(
                 'column' => 'lvl',
                 )),
-            'scope'  => new Jelly_Field_MPTT_Left(array(
+            'scope'  => new Jelly_Field_MPTT_Scope(array(
                 'column' => 'scope',
                 )),
             ));
